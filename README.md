@@ -4,7 +4,42 @@ An evidence-first, ticket-oriented engineering copilot CLI. It is designed to in
 
 ## Status
 
-**Foundation / Pre-MVP.** This repository currently contains the project constitution and architecture baseline only. No functional CLI capabilities are implemented yet.
+**Foundation / Pre-MVP.** The project constitution and architecture baseline are established. Phase 1 (CLI bootstrap) is implemented: the package installs and provides `version`, `health`, and `config-check` commands. All analysis, search, model, and integration capabilities remain planned.
+
+## Implemented in Phase 1
+
+- Installable Python 3.11 package (`agent-harness-cli`).
+- Console command `agent-harness` and module entry point `py -3.11 -m agent_harness`.
+- Commands: `version`, `health`, `config-check`.
+- Global options: `--output text|json`, `--verbose`, `--no-color`.
+- Typed configuration via `AGENT_HARNESS_*` environment variables with a mandatory read-only default.
+- Text and JSON output, stable exit codes, and stderr logging.
+
+## Getting started (Windows)
+
+Python 3.11 or newer is required. Use `py -3.11` (bare `python` resolves to Python 3.8 on this machine).
+
+```bash
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+
+Run commands:
+
+```bash
+agent-harness --help
+agent-harness version
+agent-harness --output json version
+agent-harness health
+agent-harness config-check
+```
+
+Global options appear before the subcommand. Run tests with:
+
+```bash
+.venv\Scripts\python.exe -m pytest
+```
 
 ## Planned core capabilities
 
@@ -54,7 +89,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the approved 18-phase roadmap.
 
 ## Development status warning
 
-This project is at foundation stage. Features described in this README are planned, designed, or target capabilities. They are not yet implemented. Do not expect the CLI to exist or any capability to execute.
+This project is at foundation stage. Only the Phase 1 CLI bootstrap is implemented. Every other feature described in this README is planned, designed, or a target capability and is not yet implemented. Do not expect repository analysis, ticket workflows, coverage analysis, PR review, model integration, or GitHub integration to work.
 
 ## License
 
