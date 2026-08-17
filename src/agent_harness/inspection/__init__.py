@@ -1,0 +1,67 @@
+"""Safe, metadata-only repository inspection contracts and serialization."""
+
+from .errors import (
+    InspectionError,
+    InspectionInternalError,
+    InvalidInspectionRequestError,
+    LinkEncounteredError,
+    PathEscapeError,
+    PathNotDirectoryError,
+    PathNotFoundError,
+    PermissionDeniedError,
+    PolicyDeniedError,
+    RootResolutionError,
+    UnsupportedEntryError,
+    sanitize_text,
+)
+from .request import (
+    DEFAULT_MAX_DEPTH,
+    DEFAULT_MAX_ENTRIES,
+    HARD_MAX_DEPTH,
+    HARD_MAX_ENTRIES,
+    ErrorPolicy,
+    GitMetadataMode,
+    InspectionRequest,
+    LinkPolicy,
+)
+from .result import (
+    EntryKind,
+    GitInfo,
+    InspectionEntry,
+    InspectionResult,
+    LimitInfo,
+    WarningRecord,
+)
+from .serialization import SCHEMA_VERSION, to_json, to_text
+
+__all__ = [
+    "DEFAULT_MAX_DEPTH",
+    "DEFAULT_MAX_ENTRIES",
+    "HARD_MAX_DEPTH",
+    "HARD_MAX_ENTRIES",
+    "ErrorPolicy",
+    "GitMetadataMode",
+    "InspectionRequest",
+    "LinkPolicy",
+    "EntryKind",
+    "GitInfo",
+    "InspectionEntry",
+    "InspectionResult",
+    "LimitInfo",
+    "WarningRecord",
+    "SCHEMA_VERSION",
+    "to_json",
+    "to_text",
+    "InspectionError",
+    "InspectionInternalError",
+    "InvalidInspectionRequestError",
+    "LinkEncounteredError",
+    "PathEscapeError",
+    "PathNotDirectoryError",
+    "PathNotFoundError",
+    "PermissionDeniedError",
+    "PolicyDeniedError",
+    "RootResolutionError",
+    "UnsupportedEntryError",
+    "sanitize_text",
+]

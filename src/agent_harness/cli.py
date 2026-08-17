@@ -19,6 +19,18 @@ from .exit_codes import (
 )
 from .logging_config import setup_logging
 from .output import render_config_check, render_health, render_version
+from .application.inspection_service import InspectionService
+from .infrastructure.git_metadata import GitMetadataReader
+from .infrastructure.inspector import Inspector
+from .inspection.errors import InspectionError
+from .inspection.request import (
+    DEFAULT_MAX_DEPTH,
+    DEFAULT_MAX_ENTRIES,
+    HARD_MAX_DEPTH,
+    HARD_MAX_ENTRIES,
+    InspectionRequest,
+)
+from .inspection.serialization import to_json, to_text
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
@@ -123,6 +135,83 @@ def config_check_cmd(ctx: typer.Context) -> None:
     invocation: Invocation = ctx.obj
     _ensure_config_ok()
     _execute(lambda inv: render_config_check(inv.output_format), invocation)
+
+
+def _inspection_service() -> InspectionService:
+    from .domain.allowlist import AllowlistEngine
+    from .domain.clock import UtcClock
+    from .domain.policy import DefaultPolicyEngine
+
+    return InspectionService(
+        inspector=Inspector(),
+        git_reader=GitMetadataReader(),
+        policy_engine=DefaultPolicyEngine(clock=UtcClock(), allowlist=AllowlistEngine()),
+    )
+
+
+@app.command("inspect")
+def inspect_cmd(
+    ctx: typer.Context,
+    path: Optional[str] = typer.Option(
+        None, "--path", help="Local directory to inspect (default: current directory)."
+    ),
+    max_entries: Optional[int] = typer.Option(
+        None, "--max-entries", help="Maximum file entries (bounded)."
+    ),
+    max_depth: Optional[int] = typer.Option(
+        None, "--max-depth", help="Maximum traversal depth (bounded)."
+    ),
+    use_git: Optional[bool] = typer.Option(
+        None, "--git/--no-git", help="Include or skip read-only Git metadata."
+    ),
+) -> None:
+    invocation: Invocation = ctx.obj
+    try:
+        result = _run_inspection(invocation, path, max_entries, max_depth, use_git)
+    except InspectionError as exc:
+        _fail(str(exc), exc.exit_code)
+    except typer.Exit:
+        raise
+    except KeyboardInterrupt:
+        raise
+    except Exception:
+        _fail("unexpected internal error", INTERNAL_ERROR)
+    if invocation.output_format == "json":
+        output = to_json(result)
+    else:
+        output = to_text(result)
+    typer.echo(output)
+
+
+def _run_inspection(
+    invocation: Invocation,
+    path: Optional[str],
+    max_entries: Optional[int],
+    max_depth: Optional[int],
+    use_git: Optional[bool],
+):
+    if max_entries is not None and not (1 <= max_entries <= HARD_MAX_ENTRIES):
+        _fail(
+            f"invalid --max-entries {max_entries}; must be between 1 and {HARD_MAX_ENTRIES}",
+            USAGE_ERROR,
+        )
+    if max_depth is not None and not (1 <= max_depth <= HARD_MAX_DEPTH):
+        _fail(
+            f"invalid --max-depth {max_depth}; must be between 1 and {HARD_MAX_DEPTH}",
+            USAGE_ERROR,
+        )
+    git_mode = "auto"
+    if use_git is True:
+        git_mode = "on"
+    elif use_git is False:
+        git_mode = "off"
+    request = InspectionRequest(
+        requested_path=path or ".",
+        max_entries=max_entries if max_entries is not None else DEFAULT_MAX_ENTRIES,
+        max_depth=max_depth if max_depth is not None else DEFAULT_MAX_DEPTH,
+        git_metadata=git_mode,
+    )
+    return _inspection_service().inspect(request)
 
 
 def main() -> None:
